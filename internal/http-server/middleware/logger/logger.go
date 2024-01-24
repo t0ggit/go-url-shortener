@@ -1,0 +1,44 @@
+package logger
+
+import (
+	"github.com/go-chi/chi/v5/middleware"
+	"log/slog"
+	"net/http"
+	"time"
+)
+
+const (
+	reqIDKey = "request_id"
+)
+
+func New(log *slog.Logger) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		log = log.With(slog.String("component", "middleware/logger"))
+
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			entry := log.With(
+				slog.String("method", r.Method),
+				slog.String("url_path", r.URL.Path),
+				slog.String("remote_addr", r.RemoteAddr),
+				slog.String("user_agent", r.UserAgent()),
+				slog.String("protocol", r.Proto),
+				slog.Int64("content_length", r.ContentLength),
+				slog.String(reqIDKey, middleware.GetReqID(r.Context())),
+			)
+
+			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+
+			t1 := time.Now()
+			defer func() {
+				entry.Info("request completed",
+					slog.Int("status", ww.Status()),
+					slog.Int("bytes_written", ww.BytesWritten()),
+					slog.String("duration", time.Since(t1).String()),
+				)
+			}()
+
+			next.ServeHTTP(ww, r)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
