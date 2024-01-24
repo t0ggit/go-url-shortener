@@ -45,10 +45,16 @@ func main() {
 		middleware.URLFormat,
 	)
 
-	router.Post("/save-url", save.New(log, storage))
-	router.Post("/delete-url", delete.New(log, storage))
-	router.Post("/update-url", update.New(log, storage))
 	router.Get("/{alias}", redirect.New(log, storage))
+
+	router.Route("/modify", func(r chi.Router) {
+		r.Use(middleware.BasicAuth("url-shortener", map[string]string{
+			cfg.HTTPServer.User: cfg.HTTPServer.Password,
+		}))
+		r.Post("/save-url", save.New(log, storage))
+		r.Post("/delete-url", delete.New(log, storage))
+		r.Post("/update-url", update.New(log, storage))
+	})
 
 	// run server
 	log.Info("starting server", slog.String("address", cfg.HTTPServer.Address))

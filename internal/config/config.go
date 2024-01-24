@@ -25,6 +25,8 @@ type HTTPServer struct {
 	Address     string        `yaml:"address"`
 	Timeout     time.Duration `yaml:"timeout"`
 	IdleTimeout time.Duration `yaml:"idle_timeout"`
+	User        string        `yaml:"user" env_required:"true"`
+	Password    string        `yaml:"password" env_required:"true" env:"HTTP_SERVER_PASSWORD"`
 }
 
 func MustLoad() *Config {

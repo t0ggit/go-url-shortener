@@ -10,3 +10,4 @@ http_server:
   address: "192.168.1.40:8080"
   timeout: 5s
   idle_timeout: 30s
+  user: "admin" # password in env variable HTTP_SERVER_PASSWORD
