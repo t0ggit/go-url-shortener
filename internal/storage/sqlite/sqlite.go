@@ -103,6 +103,17 @@ func (s *Storage) DeleteURL(alias string) error {
 func (s *Storage) UpdateURL(newURL string, alias string) error {
 	const op = "storage.sqlite.UpdateURL"
 
+	oldURL, err := s.GetURL(alias)
+	if err != nil {
+		if errors.Is(err, storage.ErrURLNotFound) {
+			return fmt.Errorf("%s: %w", op, storage.ErrURLNotFound)
+		}
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	if oldURL == newURL {
+		return fmt.Errorf("%s: %w", op, storage.ErrURLExists)
+	}
+
 	stmt, err := s.db.Prepare("UPDATE url_shortener SET url = ? WHERE alias = ?")
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
